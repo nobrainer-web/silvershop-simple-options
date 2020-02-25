@@ -21,9 +21,9 @@ class SimpleOptionsForm extends AddProductForm
     {
         $fields = parent::getFormFields($controller);
 
-        if (!$controller) {
-            return $fields;
-        }
+//        if (!$controller) {
+//            return $fields;
+//        }
 
         $p = $this->getBuyable();
 
