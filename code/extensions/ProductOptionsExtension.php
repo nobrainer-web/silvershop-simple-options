@@ -30,7 +30,6 @@ class ProductOptionsExtension extends \DataExtension
             $config->addComponent(new \GridFieldOrderableRows("Sort"));
             $gridfield = \GridField::create('ProductOptions', 'Simple Options', $this->owner->ProductOptions(), $config);
             $fields->addFieldToTab('Root.SimpleOptions', $gridfield);
-
             $fields->addFieldToTab('Root.Variations', \LiteralField::create("vanotice", "<p style=\"color:red;\">You can not apply variations when you've applied options</p>"));
             $fields->removeFieldFromTab('Root.Variations', "Variations");
             $fields->removeFieldFromTab('Root.Variations', "VariationAttributeTypes");

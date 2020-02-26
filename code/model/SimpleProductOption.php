@@ -31,7 +31,8 @@ class SimpleProductOption extends DataObject
      */
     private static $db = [
         'Title' => 'Varchar',
-        'Sort'  => 'Int'
+        'Sort'  => 'Int',
+        'Type'  => 'Enum("Dropdown, Radio", "Dropdown")',
     ];
 
     /**
@@ -73,7 +74,14 @@ class SimpleProductOption extends DataObject
             $str = 'Existing options: ' . implode(", ", $options->column("Title"));
         }
 
-        $fields->addFieldToTab('Root.Main', TextField::create("Title")->setDescription($str));
+        $fields->addFieldsToTab('Root.Main', [
+            TextField::create("Title")->setDescription($str),
+            $typeField = DropdownField::create('Type', 'Type', $this->dbObject('Type')->enumValues())
+        ]);
+
+        if ($this->isDropdown()) {
+            $typeField->setDescription('Only radio button options can have description and image.');
+        }
 
         $comp = new GridFieldEditableColumns();
         $comp->setDisplayFields([
@@ -98,6 +106,7 @@ class SimpleProductOption extends DataObject
             ->removeComponentsByType('GridFieldDeleteAction')
             ->addComponent($comp)
             ->addComponent($btn)
+            ->addComponent(new GridFieldEditButton())
             ->addComponent(new GridFieldDeleteAction())
             ->addComponent(new \GridFieldOrderableRows("Sort"));
         $gridfield = \GridField::create('Values', 'Values', $this->Values(), $config);
@@ -123,6 +132,11 @@ class SimpleProductOption extends DataObject
         }
 
         return implode(', ', $arr);
+    }
+
+    public function isDropdown()
+    {
+        return $this->Type === 'Dropdown';
     }
 
     /**
@@ -154,7 +168,22 @@ class SimpleProductOption extends DataObject
 
         $title = self::getFormFieldName($this->ID);
 
-        $field = DropdownField::create($title, $this->getLabel(), $values);
+        if ($this->isDropdown()) {
+            $field = DropdownField::create($title, $this->getLabel(), $values);
+        } else {
+            $field = OptionsetField::create($title, $this->getLabel(), $values);
+            $field->setTemplate('forms/SimpleOptionsetField');
+            // Warning: Sorry, this is a nasty hack.
+            // Going to let javascript handle translating the data attributes into content in post.
+            foreach ($this->Values() as $i => $value) {
+                $image = $value->Image();
+                if ($image->exists()) {
+                    $field->setAttribute("data-image-$i", $image->CroppedFocusedImage(56, 52)->URL);
+                }
+                $field->setAttribute("data-description-$i", $value->Description);
+            }
+        }
+
         $field
             ->setAttribute("data-prices", json_encode($this->Values()->map("ID", "Price")->toArray()))// enable JS to easily get price value
             ->setEmptyString(_t('SimpleProductOption.Choose', 'Choose {name}', array('name' => $this->getLabel())));
