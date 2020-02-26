@@ -28,9 +28,10 @@ class SimpleProductOptionValue extends DataObject
      * @var array
      */
     private static $db = array(
-        'Title' => 'Varchar',
-        'Sort'  => 'Int',
-        'Price' => 'Currency(19,4)'
+        'Title'       => 'Varchar',
+        'Description' => 'Varchar(255)',
+        'Sort'        => 'Int',
+        'Price'       => 'Currency(19,4)'
     );
 
     /**
@@ -39,7 +40,8 @@ class SimpleProductOptionValue extends DataObject
      * @var array
      */
     private static $has_one = array(
-        'ProductOption' => 'SimpleProductOption'
+        'ProductOption' => 'SimpleProductOption',
+        'Image'         => 'Image',
     );
 
     /**
@@ -51,7 +53,15 @@ class SimpleProductOptionValue extends DataObject
     {
         $fields = parent::getCMSFields();
 
-        $fields->removeByName(['Sort']);
+        $fields->removeByName(['Sort', 'Image']);
+        $fields->insertBefore('Title', $fields->dataFieldByName('ProductOptionID'));
+
+        if (!$this->ProductOption()->isDropdown()) {
+            $fields->addFieldsToTab('Root.Main', [
+                TextField::create('Description', 'Description'),
+                UploadField::create('Image')
+            ]);
+        }
 
         $this->extend('updateCMSFields', $fields);
 
@@ -65,7 +75,7 @@ class SimpleProductOptionValue extends DataObject
     {
         $title = (string)$this->Title;
 
-        if($this->Price !== '0.0000'){
+        if ($this->Price !== '0.0000') {
             $title .= ' (+' . $this->dbObject("Price")->Nice() . ')';
         }
 

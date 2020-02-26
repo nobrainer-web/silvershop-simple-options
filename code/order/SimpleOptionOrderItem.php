@@ -17,7 +17,7 @@ class SimpleOptionOrderItem extends Product_OrderItem
         }
 
         // do this to have various shopping cart links still working
-        foreach ($this->OrderOptionDataItems() as $item){
+        foreach ($this->OrderOptionDataItems() as $item) {
             $key = SimpleProductOption::getFormFieldName($item->SimpleProductOptionID);
             $uniquedata[$key] = $item->SimpleProductOptionValueID;
         }
